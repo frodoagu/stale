@@ -365,6 +365,7 @@ const option_1 = __nccwpck_require__(5931);
 const get_humanized_date_1 = __nccwpck_require__(965);
 const is_date_more_recent_than_1 = __nccwpck_require__(1473);
 const is_valid_date_1 = __nccwpck_require__(891);
+const parse_time_string_1 = __nccwpck_require__(6377);
 const is_boolean_1 = __nccwpck_require__(8236);
 const is_labeled_1 = __nccwpck_require__(6792);
 const clean_label_1 = __nccwpck_require__(7752);
@@ -388,7 +389,7 @@ const get_sort_field_1 = __nccwpck_require__(9551);
  */
 class IssuesProcessor {
     static _updatedSince(timestamp, num_days) {
-        const daysInMillis = 1000 * 60 * 60 * 24 * num_days;
+        const daysInMillis = (0, parse_time_string_1.daysToMilliseconds)(num_days);
         const millisSinceLastUpdated = new Date().getTime() - new Date(timestamp).getTime();
         return millisSinceLastUpdated <= daysInMillis;
     }
@@ -489,8 +490,8 @@ class IssuesProcessor {
                 ? this.options.stalePrMessage.length === 0
                 : this.options.staleIssueMessage.length === 0;
             const daysBeforeStale = issue.isPullRequest
-                ? this._getDaysBeforePrStale()
-                : this._getDaysBeforeIssueStale();
+                ? this._getTimeBeforePrStale()
+                : this._getTimeBeforeIssueStale();
             if (issue.state === 'closed') {
                 issueLogger.info(`Skipping this $$type because it is closed`);
                 IssuesProcessor._endIssueProcessing(issue);
@@ -624,14 +625,14 @@ class IssuesProcessor {
                         issueLogger.info(`This $$type should be stale based on the last update date the ${(0, get_humanized_date_1.getHumanizedDate)(new Date(issue.updated_at))} (${logger_service_1.LoggerService.cyan(issue.updated_at)})`);
                     }
                     if (shouldMarkAsStale) {
-                        issueLogger.info(`This $$type should be marked as stale based on the option ${issueLogger.createOptionLink(this._getDaysBeforeStaleUsedOptionName(issue))} (${logger_service_1.LoggerService.cyan(daysBeforeStale)})`);
+                        issueLogger.info(`This $$type should be marked as stale based on the option ${issueLogger.createOptionLink(this._getTimeBeforeStaleUsedOptionName(issue))} (${logger_service_1.LoggerService.cyan(daysBeforeStale)})`);
                         yield this._markStale(issue, staleMessage, staleLabel, skipMessage);
                         issue.isStale = true; // This issue is now considered stale
                         issue.markedStaleThisRun = true;
                         issueLogger.info(`This $$type is now stale`);
                     }
                     else {
-                        issueLogger.info(`This $$type should not be marked as stale based on the option ${issueLogger.createOptionLink(this._getDaysBeforeStaleUsedOptionName(issue))} (${logger_service_1.LoggerService.cyan(daysBeforeStale)})`);
+                        issueLogger.info(`This $$type should not be marked as stale based on the option ${issueLogger.createOptionLink(this._getTimeBeforeStaleUsedOptionName(issue))} (${logger_service_1.LoggerService.cyan(daysBeforeStale)})`);
                     }
                 }
                 else {
@@ -762,8 +763,8 @@ class IssuesProcessor {
             const issueHasCommentsSinceStale = yield this._hasCommentsSince(issue, markedStaleOn, staleMessage);
             issueLogger.info(`$$type has been commented on: ${logger_service_1.LoggerService.cyan(issueHasCommentsSinceStale)}`);
             const daysBeforeClose = issue.isPullRequest
-                ? this._getDaysBeforePrClose()
-                : this._getDaysBeforeIssueClose();
+                ? this._getTimeBeforePrClose()
+                : this._getTimeBeforeIssueClose();
             issueLogger.info(`Days before $$type close: ${logger_service_1.LoggerService.cyan(daysBeforeClose)}`);
             const shouldRemoveStaleWhenUpdated = this._shouldRemoveStaleWhenUpdated(issue);
             issueLogger.info(`The option ${issueLogger.createOptionLink(this._getRemoveStaleWhenUpdatedUsedOptionName(issue))} is: ${logger_service_1.LoggerService.cyan(shouldRemoveStaleWhenUpdated)}`);
@@ -1004,25 +1005,25 @@ class IssuesProcessor {
             }
         });
     }
-    _getDaysBeforeIssueStale() {
-        return isNaN(this.options.daysBeforeIssueStale)
-            ? this.options.daysBeforeStale
-            : this.options.daysBeforeIssueStale;
+    _getTimeBeforeIssueStale() {
+        return isNaN(this.options.timeBeforeIssueStale)
+            ? this.options.timeBeforeStale
+            : this.options.timeBeforeIssueStale;
     }
-    _getDaysBeforePrStale() {
-        return isNaN(this.options.daysBeforePrStale)
-            ? this.options.daysBeforeStale
-            : this.options.daysBeforePrStale;
+    _getTimeBeforePrStale() {
+        return isNaN(this.options.timeBeforePrStale)
+            ? this.options.timeBeforeStale
+            : this.options.timeBeforePrStale;
     }
-    _getDaysBeforeIssueClose() {
-        return isNaN(this.options.daysBeforeIssueClose)
-            ? this.options.daysBeforeClose
-            : this.options.daysBeforeIssueClose;
+    _getTimeBeforeIssueClose() {
+        return isNaN(this.options.timeBeforeIssueClose)
+            ? this.options.timeBeforeClose
+            : this.options.timeBeforeIssueClose;
     }
-    _getDaysBeforePrClose() {
-        return isNaN(this.options.daysBeforePrClose)
-            ? this.options.daysBeforeClose
-            : this.options.daysBeforePrClose;
+    _getTimeBeforePrClose() {
+        return isNaN(this.options.timeBeforePrClose)
+            ? this.options.timeBeforeClose
+            : this.options.timeBeforePrClose;
     }
     _getOnlyLabels(issue) {
         if (issue.isPullRequest) {
@@ -1137,20 +1138,20 @@ class IssuesProcessor {
         this.operations.consumeOperation();
         issue.operations.consumeOperation();
     }
-    _getDaysBeforeStaleUsedOptionName(issue) {
+    _getTimeBeforeStaleUsedOptionName(issue) {
         return issue.isPullRequest
-            ? this._getDaysBeforePrStaleUsedOptionName()
-            : this._getDaysBeforeIssueStaleUsedOptionName();
+            ? this._getTimeBeforePrStaleUsedOptionName()
+            : this._getTimeBeforeIssueStaleUsedOptionName();
     }
-    _getDaysBeforeIssueStaleUsedOptionName() {
-        return isNaN(this.options.daysBeforeIssueStale)
-            ? option_1.Option.DaysBeforeStale
-            : option_1.Option.DaysBeforeIssueStale;
+    _getTimeBeforeIssueStaleUsedOptionName() {
+        return isNaN(this.options.timeBeforeIssueStale)
+            ? option_1.Option.TimeBeforeStale
+            : option_1.Option.TimeBeforeIssueStale;
     }
-    _getDaysBeforePrStaleUsedOptionName() {
-        return isNaN(this.options.daysBeforePrStale)
-            ? option_1.Option.DaysBeforeStale
-            : option_1.Option.DaysBeforePrStale;
+    _getTimeBeforePrStaleUsedOptionName() {
+        return isNaN(this.options.timeBeforePrStale)
+            ? option_1.Option.TimeBeforeStale
+            : option_1.Option.TimeBeforePrStale;
     }
     _getRemoveStaleWhenUpdatedUsedOptionName(issue) {
         if (issue.isPullRequest) {
@@ -2179,6 +2180,13 @@ var Option;
     Option["StalePrMessage"] = "stale-pr-message";
     Option["CloseIssueMessage"] = "close-issue-message";
     Option["ClosePrMessage"] = "close-pr-message";
+    Option["TimeBeforeStale"] = "time-before-stale";
+    Option["TimeBeforeIssueStale"] = "time-before-issue-stale";
+    Option["TimeBeforePrStale"] = "time-before-pr-stale";
+    Option["TimeBeforeClose"] = "time-before-close";
+    Option["TimeBeforeIssueClose"] = "time-before-issue-close";
+    Option["TimeBeforePrClose"] = "time-before-pr-close";
+    // DEPRECATED: Use TimeBeforeStale instead
     Option["DaysBeforeStale"] = "days-before-stale";
     Option["DaysBeforeIssueStale"] = "days-before-issue-stale";
     Option["DaysBeforePrStale"] = "days-before-pr-stale";
@@ -2414,6 +2422,84 @@ exports.isPullRequest = isPullRequest;
 
 /***/ }),
 
+/***/ 6377:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.daysToMilliseconds = exports.parseTimeString = void 0;
+/**
+ * Parses a time string and returns the equivalent number of days.
+ * Supports the following units:
+ * - d or days: days
+ * - h or hours: hours
+ * - m or minutes: minutes
+ *
+ * Examples:
+ * - "1d" or "1 day" = 1 day
+ * - "20h" or "20 hours" = 20/24 days
+ * - "50m" or "50 minutes" = 50/(24*60) days
+ * - "1.5d" = 1.5 days
+ * - "30" = 30 days (backwards compatibility)
+ *
+ * @param timeString The time string to parse
+ * @returns The equivalent number of days as a float
+ * @throws Error if the time string format is invalid
+ */
+function parseTimeString(timeString) {
+    if (!timeString || timeString.trim() === '') {
+        throw new Error('Time string cannot be empty');
+    }
+    const trimmed = timeString.trim();
+    // Handle backwards compatibility - if it's just a number, treat as days
+    const numberOnlyMatch = trimmed.match(/^-?\d+(\.\d+)?$/);
+    if (numberOnlyMatch) {
+        return parseFloat(trimmed);
+    }
+    // Parse time string with units
+    const timeRegex = /^(-?\d+(?:\.\d+)?)\s*(d|day|days|h|hour|hours|m|min|minute|minutes)$/i;
+    const match = trimmed.match(timeRegex);
+    if (!match) {
+        throw new Error(`Invalid time format: "${timeString}". Expected format: number followed by unit (d, h, m) or just a number for days. Examples: "1d", "20h", "50m", "1.5d"`);
+    }
+    const value = parseFloat(match[1]);
+    const unit = match[2].toLowerCase();
+    if (isNaN(value)) {
+        throw new Error(`Invalid numeric value: "${match[1]}"`);
+    }
+    switch (unit) {
+        case 'd':
+        case 'day':
+        case 'days':
+            return value;
+        case 'h':
+        case 'hour':
+        case 'hours':
+            return value / 24;
+        case 'm':
+        case 'min':
+        case 'minute':
+        case 'minutes':
+            return value / (24 * 60);
+        default:
+            throw new Error(`Unsupported time unit: "${unit}"`);
+    }
+}
+exports.parseTimeString = parseTimeString;
+/**
+ * Converts a number of days to milliseconds for time comparisons
+ * @param days The number of days (can be fractional)
+ * @returns The equivalent number of milliseconds
+ */
+function daysToMilliseconds(days) {
+    return days * 24 * 60 * 60 * 1000;
+}
+exports.daysToMilliseconds = daysToMilliseconds;
+
+
+/***/ }),
+
 /***/ 2461:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -2505,6 +2591,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const issues_processor_1 = __nccwpck_require__(3292);
 const is_valid_date_1 = __nccwpck_require__(891);
 const state_service_1 = __nccwpck_require__(6330);
+const parse_time_string_1 = __nccwpck_require__(6377);
 function _run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -2533,6 +2620,35 @@ function _run() {
         }
     });
 }
+function _parseTimeInput(input) {
+    try {
+        return (0, parse_time_string_1.parseTimeString)(input);
+    }
+    catch (error) {
+        const errorMessage = `Invalid time format: "${input}". ${error.message}`;
+        core.setFailed(errorMessage);
+        throw new Error(errorMessage);
+    }
+}
+function _getTimeInput(newOptionName, oldOptionName, required = false) {
+    // Try new option name first, then fall back to old one for backward compatibility
+    const newValue = core.getInput(newOptionName, { required: false });
+    if (newValue) {
+        return newValue;
+    }
+    const oldValue = core.getInput(oldOptionName, { required });
+    if (oldValue) {
+        // Warn about deprecated option
+        core.info(`Warning: "${oldOptionName}" is deprecated. Please use "${newOptionName}" instead.`);
+        return oldValue;
+    }
+    if (required) {
+        const errorMessage = `Neither "${newOptionName}" nor "${oldOptionName}" was provided, but one is required.`;
+        core.setFailed(errorMessage);
+        throw new Error(errorMessage);
+    }
+    return '';
+}
 function _getAndValidateArgs() {
     const args = {
         repoToken: core.getInput('repo-token'),
@@ -2540,12 +2656,16 @@ function _getAndValidateArgs() {
         stalePrMessage: core.getInput('stale-pr-message'),
         closeIssueMessage: core.getInput('close-issue-message'),
         closePrMessage: core.getInput('close-pr-message'),
-        daysBeforeStale: parseFloat(core.getInput('days-before-stale', { required: true })),
-        daysBeforeIssueStale: parseFloat(core.getInput('days-before-issue-stale')),
-        daysBeforePrStale: parseFloat(core.getInput('days-before-pr-stale')),
-        daysBeforeClose: parseInt(core.getInput('days-before-close', { required: true })),
-        daysBeforeIssueClose: parseInt(core.getInput('days-before-issue-close')),
-        daysBeforePrClose: parseInt(core.getInput('days-before-pr-close')),
+        timeBeforeStale: _parseTimeInput(_getTimeInput('time-before-stale', 'days-before-stale', true)),
+        timeBeforeIssueStale: _getTimeInput('time-before-issue-stale', 'days-before-issue-stale') ?
+            _parseTimeInput(_getTimeInput('time-before-issue-stale', 'days-before-issue-stale')) : NaN,
+        timeBeforePrStale: _getTimeInput('time-before-pr-stale', 'days-before-pr-stale') ?
+            _parseTimeInput(_getTimeInput('time-before-pr-stale', 'days-before-pr-stale')) : NaN,
+        timeBeforeClose: _parseTimeInput(_getTimeInput('time-before-close', 'days-before-close', true)),
+        timeBeforeIssueClose: _getTimeInput('time-before-issue-close', 'days-before-issue-close') ?
+            _parseTimeInput(_getTimeInput('time-before-issue-close', 'days-before-issue-close')) : NaN,
+        timeBeforePrClose: _getTimeInput('time-before-pr-close', 'days-before-pr-close') ?
+            _parseTimeInput(_getTimeInput('time-before-pr-close', 'days-before-pr-close')) : NaN,
         staleIssueLabel: core.getInput('stale-issue-label', { required: true }),
         closeIssueLabel: core.getInput('close-issue-label'),
         exemptIssueLabels: core.getInput('exempt-issue-labels'),
@@ -2592,14 +2712,7 @@ function _getAndValidateArgs() {
         closeIssueReason: core.getInput('close-issue-reason'),
         includeOnlyAssigned: core.getInput('include-only-assigned') === 'true'
     };
-    for (const numberInput of ['days-before-stale']) {
-        if (isNaN(parseFloat(core.getInput(numberInput)))) {
-            const errorMessage = `Option "${numberInput}" did not parse to a valid float`;
-            core.setFailed(errorMessage);
-            throw new Error(errorMessage);
-        }
-    }
-    for (const numberInput of ['days-before-close', 'operations-per-run']) {
+    for (const numberInput of ['operations-per-run']) {
         if (isNaN(parseInt(core.getInput(numberInput)))) {
             const errorMessage = `Option "${numberInput}" did not parse to a valid integer`;
             core.setFailed(errorMessage);

@@ -572,8 +572,8 @@ class SUT {
 
   staleIn(days: number): SUT {
     this._updateOptions({
-      daysBeforeIssueStale: days,
-      daysBeforePrStale: days
+      timeBeforeIssueStale: days,
+      timeBeforePrStale: days
     });
 
     return this;

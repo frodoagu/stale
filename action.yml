@@ -18,25 +18,45 @@ inputs:
   close-pr-message:
     description: 'The message to post on the pull request when closing it. If none provided, will not comment when closing a pull requests.'
     required: false
-  days-before-stale:
-    description: 'The number of days old an issue or a pull request can be before marking it stale. Set to -1 to never mark issues or pull requests as stale automatically.'
+  time-before-stale:
+    description: 'The time before marking an issue or pull request as stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never mark issues or pull requests as stale automatically.'
     required: false
     default: '60'
+  days-before-stale:
+    description: 'DEPRECATED: Use time-before-stale instead. The time before marking an issue or pull request as stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never mark issues or pull requests as stale automatically.'
+    required: false
+    default: '60'
+  time-before-issue-stale:
+    description: 'The time before marking an issue as stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never mark issues as stale automatically. Override "time-before-stale" option regarding only the issues.'
+    required: false
   days-before-issue-stale:
-    description: 'The number of days old an issue can be before marking it stale. Set to -1 to never mark issues as stale automatically. Override "days-before-stale" option regarding only the issues.'
+    description: 'DEPRECATED: Use time-before-issue-stale instead. The time before marking an issue as stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never mark issues as stale automatically. Override "time-before-stale" option regarding only the issues.'
+    required: false
+  time-before-pr-stale:
+    description: 'The time before marking a pull request as stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never mark pull requests as stale automatically. Override "time-before-stale" option regarding only the pull requests.'
     required: false
   days-before-pr-stale:
-    description: 'The number of days old a pull request can be before marking it stale. Set to -1 to never mark pull requests as stale automatically. Override "days-before-stale" option regarding only the pull requests.'
+    description: 'DEPRECATED: Use time-before-pr-stale instead. The time before marking a pull request as stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never mark pull requests as stale automatically. Override "time-before-stale" option regarding only the pull requests.'
     required: false
-  days-before-close:
-    description: 'The number of days to wait to close an issue or a pull request after it being marked stale. Set to -1 to never close stale issues or pull requests.'
+  time-before-close:
+    description: 'The time to wait before closing an issue or pull request after it being marked stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never close stale issues or pull requests.'
     required: false
     default: '7'
+  days-before-close:
+    description: 'DEPRECATED: Use time-before-close instead. The time to wait before closing an issue or pull request after it being marked stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never close stale issues or pull requests.'
+    required: false
+    default: '7'
+  time-before-issue-close:
+    description: 'The time to wait before closing an issue after it being marked stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never close stale issues. Override "time-before-close" option regarding only the issues.'
+    required: false
   days-before-issue-close:
-    description: 'The number of days to wait to close an issue after it being marked stale. Set to -1 to never close stale issues. Override "days-before-close" option regarding only the issues.'
+    description: 'DEPRECATED: Use time-before-issue-close instead. The time to wait before closing an issue after it being marked stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never close stale issues. Override "time-before-close" option regarding only the issues.'
+    required: false
+  time-before-pr-close:
+    description: 'The time to wait before closing a pull request after it being marked stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never close stale pull requests. Override "time-before-close" option regarding only the pull requests.'
     required: false
   days-before-pr-close:
-    description: 'The number of days to wait to close a pull request after it being marked stale. Set to -1 to never close stale pull requests. Override "days-before-close" option regarding only the pull requests.'
+    description: 'DEPRECATED: Use time-before-pr-close instead. The time to wait before closing a pull request after it being marked stale. Supports flexible time formats: number for days (backwards compatible), or number with unit (e.g., "1d", "20h", "50m"). Set to -1 to never close stale pull requests. Override "time-before-close" option regarding only the pull requests.'
     required: false
   stale-issue-label:
     description: 'The label to apply when an issue is stale.'

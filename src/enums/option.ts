@@ -4,6 +4,13 @@ export enum Option {
   StalePrMessage = 'stale-pr-message',
   CloseIssueMessage = 'close-issue-message',
   ClosePrMessage = 'close-pr-message',
+  TimeBeforeStale = 'time-before-stale',
+  TimeBeforeIssueStale = 'time-before-issue-stale',
+  TimeBeforePrStale = 'time-before-pr-stale',
+  TimeBeforeClose = 'time-before-close',
+  TimeBeforeIssueClose = 'time-before-issue-close',
+  TimeBeforePrClose = 'time-before-pr-close',
+  // DEPRECATED: Use TimeBeforeStale instead
   DaysBeforeStale = 'days-before-stale',
   DaysBeforeIssueStale = 'days-before-issue-stale',
   DaysBeforePrStale = 'days-before-pr-stale',

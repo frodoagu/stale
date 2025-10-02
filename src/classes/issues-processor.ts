@@ -5,6 +5,7 @@ import {Option} from '../enums/option';
 import {getHumanizedDate} from '../functions/dates/get-humanized-date';
 import {isDateMoreRecentThan} from '../functions/dates/is-date-more-recent-than';
 import {isValidDate} from '../functions/dates/is-valid-date';
+import {daysToMilliseconds} from '../functions/parse-time-string';
 import {isBoolean} from '../functions/is-boolean';
 import {isLabeled} from '../functions/is-labeled';
 import {cleanLabel} from '../functions/clean-label';
@@ -37,7 +38,7 @@ import {getSortField} from '../functions/get-sort-field';
 
 export class IssuesProcessor {
   private static _updatedSince(timestamp: string, num_days: number): boolean {
-    const daysInMillis = 1000 * 60 * 60 * 24 * num_days;
+    const daysInMillis = daysToMilliseconds(num_days);
     const millisSinceLastUpdated =
       new Date().getTime() - new Date(timestamp).getTime();
 
@@ -229,8 +230,8 @@ export class IssuesProcessor {
       ? this.options.stalePrMessage.length === 0
       : this.options.staleIssueMessage.length === 0;
     const daysBeforeStale: number = issue.isPullRequest
-      ? this._getDaysBeforePrStale()
-      : this._getDaysBeforeIssueStale();
+      ? this._getTimeBeforePrStale()
+      : this._getTimeBeforeIssueStale();
 
     if (issue.state === 'closed') {
       issueLogger.info(`Skipping this $$type because it is closed`);
@@ -491,7 +492,7 @@ export class IssuesProcessor {
         if (shouldMarkAsStale) {
           issueLogger.info(
             `This $$type should be marked as stale based on the option ${issueLogger.createOptionLink(
-              this._getDaysBeforeStaleUsedOptionName(issue)
+              this._getTimeBeforeStaleUsedOptionName(issue)
             )} (${LoggerService.cyan(daysBeforeStale)})`
           );
           await this._markStale(issue, staleMessage, staleLabel, skipMessage);
@@ -501,7 +502,7 @@ export class IssuesProcessor {
         } else {
           issueLogger.info(
             `This $$type should not be marked as stale based on the option ${issueLogger.createOptionLink(
-              this._getDaysBeforeStaleUsedOptionName(issue)
+              this._getTimeBeforeStaleUsedOptionName(issue)
             )} (${LoggerService.cyan(daysBeforeStale)})`
           );
         }
@@ -681,8 +682,8 @@ export class IssuesProcessor {
     );
 
     const daysBeforeClose: number = issue.isPullRequest
-      ? this._getDaysBeforePrClose()
-      : this._getDaysBeforeIssueClose();
+      ? this._getTimeBeforePrClose()
+      : this._getTimeBeforeIssueClose();
 
     issueLogger.info(
       `Days before $$type close: ${LoggerService.cyan(daysBeforeClose)}`
@@ -1047,28 +1048,28 @@ export class IssuesProcessor {
     }
   }
 
-  private _getDaysBeforeIssueStale(): number {
-    return isNaN(this.options.daysBeforeIssueStale)
-      ? this.options.daysBeforeStale
-      : this.options.daysBeforeIssueStale;
+  private _getTimeBeforeIssueStale(): number {
+    return isNaN(this.options.timeBeforeIssueStale)
+      ? this.options.timeBeforeStale
+      : this.options.timeBeforeIssueStale;
   }
 
-  private _getDaysBeforePrStale(): number {
-    return isNaN(this.options.daysBeforePrStale)
-      ? this.options.daysBeforeStale
-      : this.options.daysBeforePrStale;
+  private _getTimeBeforePrStale(): number {
+    return isNaN(this.options.timeBeforePrStale)
+      ? this.options.timeBeforeStale
+      : this.options.timeBeforePrStale;
   }
 
-  private _getDaysBeforeIssueClose(): number {
-    return isNaN(this.options.daysBeforeIssueClose)
-      ? this.options.daysBeforeClose
-      : this.options.daysBeforeIssueClose;
+  private _getTimeBeforeIssueClose(): number {
+    return isNaN(this.options.timeBeforeIssueClose)
+      ? this.options.timeBeforeClose
+      : this.options.timeBeforeIssueClose;
   }
 
-  private _getDaysBeforePrClose(): number {
-    return isNaN(this.options.daysBeforePrClose)
-      ? this.options.daysBeforeClose
-      : this.options.daysBeforePrClose;
+  private _getTimeBeforePrClose(): number {
+    return isNaN(this.options.timeBeforePrClose)
+      ? this.options.timeBeforeClose
+      : this.options.timeBeforePrClose;
   }
 
   private _getOnlyLabels(issue: Issue): string {
@@ -1241,31 +1242,31 @@ export class IssuesProcessor {
     issue.operations.consumeOperation();
   }
 
-  private _getDaysBeforeStaleUsedOptionName(
+  private _getTimeBeforeStaleUsedOptionName(
     issue: Readonly<Issue>
   ):
-    | Option.DaysBeforeStale
-    | Option.DaysBeforeIssueStale
-    | Option.DaysBeforePrStale {
+    | Option.TimeBeforeStale
+    | Option.TimeBeforeIssueStale
+    | Option.TimeBeforePrStale {
     return issue.isPullRequest
-      ? this._getDaysBeforePrStaleUsedOptionName()
-      : this._getDaysBeforeIssueStaleUsedOptionName();
+      ? this._getTimeBeforePrStaleUsedOptionName()
+      : this._getTimeBeforeIssueStaleUsedOptionName();
   }
 
-  private _getDaysBeforeIssueStaleUsedOptionName():
-    | Option.DaysBeforeStale
-    | Option.DaysBeforeIssueStale {
-    return isNaN(this.options.daysBeforeIssueStale)
-      ? Option.DaysBeforeStale
-      : Option.DaysBeforeIssueStale;
+  private _getTimeBeforeIssueStaleUsedOptionName():
+    | Option.TimeBeforeStale
+    | Option.TimeBeforeIssueStale {
+    return isNaN(this.options.timeBeforeIssueStale)
+      ? Option.TimeBeforeStale
+      : Option.TimeBeforeIssueStale;
   }
 
-  private _getDaysBeforePrStaleUsedOptionName():
-    | Option.DaysBeforeStale
-    | Option.DaysBeforePrStale {
-    return isNaN(this.options.daysBeforePrStale)
-      ? Option.DaysBeforeStale
-      : Option.DaysBeforePrStale;
+  private _getTimeBeforePrStaleUsedOptionName():
+    | Option.TimeBeforeStale
+    | Option.TimeBeforePrStale {
+    return isNaN(this.options.timeBeforePrStale)
+      ? Option.TimeBeforeStale
+      : Option.TimeBeforePrStale;
   }
 
   private _getRemoveStaleWhenUpdatedUsedOptionName(

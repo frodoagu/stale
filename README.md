@@ -46,12 +46,12 @@ Every argument is optional.
 | Input                                                               | Description                                                                 | Default               |
 | ------------------------------------------------------------------- | --------------------------------------------------------------------------- | --------------------- |
 | [repo-token](#repo-token)                                           | PAT for GitHub API authentication                                           | `${{ github.token }}` |
-| [days-before-stale](#days-before-stale)                             | Idle number of days before marking issues/PRs stale                         | `60`                  |
-| [days-before-issue-stale](#days-before-issue-stale)                 | Override [days-before-stale](#days-before-stale) for issues only            |                       |
-| [days-before-pr-stale](#days-before-pr-stale)                       | Override [days-before-stale](#days-before-stale) for PRs only               |                       |
-| [days-before-close](#days-before-close)                             | Idle number of days before closing stale issues/PRs                         | `7`                   |
-| [days-before-issue-close](#days-before-issue-close)                 | Override [days-before-close](#days-before-close) for issues only            |                       |
-| [days-before-pr-close](#days-before-pr-close)                       | Override [days-before-close](#days-before-close) for PRs only               |                       |
+| [time-before-stale](#time-before-stale)                             | Idle time before marking issues/PRs stale                                   | `60`                  |
+| [time-before-issue-stale](#time-before-issue-stale)                 | Override [time-before-stale](#time-before-stale) for issues only            |                       |
+| [time-before-pr-stale](#time-before-pr-stale)                       | Override [time-before-stale](#time-before-stale) for PRs only               |                       |
+| [time-before-close](#time-before-close)                             | Idle time before closing stale issues/PRs                                   | `7`                   |
+| [time-before-issue-close](#time-before-issue-close)                 | Override [time-before-close](#time-before-close) for issues only            |                       |
+| [time-before-pr-close](#time-before-pr-close)                       | Override [time-before-close](#time-before-close) for PRs only               |                       |
 | [stale-issue-message](#stale-issue-message)                         | Comment on the staled issues                                                |                       |
 | [stale-pr-message](#stale-pr-message)                               | Comment on the staled PRs                                                   |                       |
 | [close-issue-message](#close-issue-message)                         | Comment on the staled issues while closed                                   |                       |
@@ -116,11 +116,37 @@ Under the hood, it uses the [@actions/github](https://www.npmjs.com/package/@act
 
 Default value: `${{ github.token }}`
 
-#### days-before-stale
+#### time-before-stale
 
-The idle number of days before marking the issues or the pull requests as stale (by adding a label).  
-The issues or the pull requests will be marked as stale if the last update (based on [GitHub issue](https://docs.github.com/en/rest/reference/issues) field `updated_at`) is older than the idle number of days.  
-It means that any updates made, or any comments added to the issues or to the pull requests will restart the counter of days before marking as stale.  
+**Note: Replaces the deprecated `days-before-stale` option for better clarity about flexible time format support.**
+
+The idle time before marking the issues or the pull requests as stale (by adding a label).
+
+**Backward Compatibility:**
+The old `days-before-*` options are still supported but deprecated. If you're using them, consider migrating to the new `time-before-*` options:
+- `days-before-stale` → `time-before-stale`
+- `days-before-issue-stale` → `time-before-issue-stale`
+- `days-before-pr-stale` → `time-before-pr-stale`
+- `days-before-close` → `time-before-close`
+- `days-before-issue-close` → `time-before-issue-close`
+- `days-before-pr-close` → `time-before-pr-close`
+
+**Time Format Support:**
+This option now supports flexible time formats for more precise control:
+- **Days**: `30` or `30d` or `30 days` (backwards compatible with existing numeric values)
+- **Hours**: `24h` or `24 hours` (useful for faster response times)
+- **Minutes**: `120m` or `120 minutes` (useful for very fast response times)
+- **Fractional values**: `1.5d` or `12h` or `720m` (all equivalent to 1.5 days)
+
+**Examples:**
+- `60` or `60d` - 60 days (default behavior)
+- `24h` - 24 hours (1 day)
+- `12h` - 12 hours (0.5 days)
+- `720m` - 720 minutes (12 hours)
+- `1.5d` - 1.5 days (36 hours)
+
+The issues or the pull requests will be marked as stale if the last update (based on [GitHub issue](https://docs.github.com/en/rest/reference/issues) field `updated_at`) is older than the specified time.  
+Any updates made, or any comments added to the issues or to the pull requests will restart the counter.  
 However, if you wish to ignore this behaviour so that the creation date (based on [GitHub issue](https://docs.github.com/en/rest/reference/issues) field `created_at`) only matters, you can disable the [ignore-updates](#ignore-updates) option.
 
 If set to a negative number like `-1`, no issues or pull requests will be marked as stale automatically.  
@@ -151,23 +177,33 @@ You can fine tune which issues or pull requests should be marked as stale based 
 
 Default value: `60`
 
-#### days-before-issue-stale
+#### time-before-issue-stale
 
-Useful to override [days-before-stale](#days-before-stale) but only for the idle number of days before marking the issues as stale.
+**Note: Replaces the deprecated `days-before-issue-stale` option.**
 
-Default value: unset
-
-#### days-before-pr-stale
-
-Useful to override [days-before-stale](#days-before-stale) but only for the idle number of days before marking the pull requests as stale.
+Useful to override [time-before-stale](#time-before-stale) but only for the idle time before marking the issues as stale.
+Supports the same flexible time formats as [time-before-stale](#time-before-stale).
 
 Default value: unset
 
-#### days-before-close
+#### time-before-pr-stale
 
-The idle number of days before closing the stale issues or the stale pull requests (due to the stale label).  
-The issues or the pull requests will be closed if the last update (based on [GitHub issue](https://docs.github.com/en/rest/reference/issues) field `updated_at`) is older than the idle number of days.  
-Since adding the stale label will alter the last update date, we can calculate the number of days from this date.
+**Note: Replaces the deprecated `days-before-pr-stale` option.**
+
+Useful to override [time-before-stale](#time-before-stale) but only for the idle time before marking the pull requests as stale.
+Supports the same flexible time formats as [time-before-stale](#time-before-stale).
+
+Default value: unset
+
+#### time-before-close
+
+**Note: Replaces the deprecated `days-before-close` option.**
+
+The idle time before closing the stale issues or the stale pull requests (due to the stale label).
+Supports the same flexible time formats as [time-before-stale](#time-before-stale).
+
+The issues or the pull requests will be closed if the last update (based on [GitHub issue](https://docs.github.com/en/rest/reference/issues) field `updated_at`) is older than the specified time.  
+Since adding the stale label will alter the last update date, we can calculate the time from this date.
 
 If set to a negative number like `-1`, the issues or the pull requests will never be closed automatically.
 
@@ -178,15 +214,21 @@ The label used to stale is defined by these two options:
 
 Default value: `7`
 
-#### days-before-issue-close
+#### time-before-issue-close
 
-Override [days-before-close](#days-before-close) but only for the idle number of days before closing the stale issues.
+**Note: Replaces the deprecated `days-before-issue-close` option.**
+
+Override [time-before-close](#time-before-close) but only for the idle time before closing the stale issues.
+Supports the same flexible time formats as [time-before-stale](#time-before-stale).
 
 Default value: unset
 
-#### days-before-pr-close
+#### time-before-pr-close
 
-Override [days-before-close](#days-before-close) but only for the idle number of days before closing the stale pull requests.
+**Note: Replaces the deprecated `days-before-pr-close` option.**
+
+Override [time-before-close](#time-before-close) but only for the idle time before closing the stale pull requests.
+Supports the same flexible time formats as [time-before-stale](#time-before-stale).
 
 Default value: unset
 
@@ -524,7 +566,7 @@ Default value: `true`
 
 #### ignore-updates
 
-The option [days-before-stale](#days-before-stale) will define the number of days before considering the issues or the pull requests as stale.  
+The option [time-before-stale](#time-before-stale) will define the time before considering the issues or the pull requests as stale.  
 In most cases, the purpose of this action is to only stale when necessary so if any update occurs or if a comment is added to them, the counter will restart.  
 Nonetheless, if you don't care about this, and you prefer to stick to this number of days no matter the update, you can enable this option.  
 Instead of comparing the number of days based on the [GitHub issue](https://docs.github.com/en/rest/reference/issues) field `updated_at`, it will be based on the [GitHub issue](https://docs.github.com/en/rest/reference/issues) field `created_at`.
@@ -593,8 +635,8 @@ jobs:
       - uses: actions/stale@v10
         with:
           stale-issue-message: 'This issue is stale because it has been open 30 days with no activity. Remove stale label or comment or this will be closed in 5 days.'
-          days-before-stale: 30
-          days-before-close: 5
+          time-before-stale: 30
+          time-before-close: 5
 ```
 
 Configure different stale timeouts but never close a PR:
@@ -614,9 +656,9 @@ jobs:
           stale-issue-message: 'This issue is stale because it has been open 30 days with no activity. Remove stale label or comment or this will be closed in 5 days.'
           stale-pr-message: 'This PR is stale because it has been open 45 days with no activity. Remove stale label or comment or this will be closed in 10 days.'
           close-issue-message: 'This issue was closed because it has been stalled for 5 days with no activity.'
-          days-before-stale: 30
-          days-before-close: 5
-          days-before-pr-close: -1
+          time-before-stale: 30
+          time-before-close: 5
+          time-before-pr-close: -1
 ```
 
 Configure different stale timeouts:
@@ -637,10 +679,7 @@ jobs:
           stale-pr-message: 'This PR is stale because it has been open 45 days with no activity. Remove stale label or comment or this will be closed in 10 days.'
           close-issue-message: 'This issue was closed because it has been stalled for 5 days with no activity.'
           close-pr-message: 'This PR was closed because it has been stalled for 10 days with no activity.'
-          days-before-issue-stale: 30
-          days-before-pr-stale: 45
-          days-before-issue-close: 5
-          days-before-pr-close: 10
+          time-before-issue-stale: 30\n          time-before-pr-stale: 45\n          time-before-issue-close: 5\n          time-before-pr-close: 10\n```\n\nConfigure with flexible time formats:\n\n```yaml\nname: 'Close stale issues and PRs'\non:\n  schedule:\n    - cron: '30 1 * * *'\n\njobs:\n  stale:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/stale@v10\n        with:\n          stale-issue-message: 'This issue is stale because it has been open for 2 days with no activity.'\n          stale-pr-message: 'This PR is stale because it has been open for 12 hours with no activity.'\n          close-issue-message: 'This issue was closed because it has been stalled for 6 hours with no activity.'\n          close-pr-message: 'This PR was closed because it has been stalled for 2 hours with no activity.'\n          time-before-issue-stale: 2d     # 2 days\n          time-before-pr-stale: 12h       # 12 hours\n          time-before-issue-close: 6h     # 6 hours\n          time-before-pr-close: 120m      # 2 hours (120 minutes)
 ```
 
 Configure labels:
@@ -662,7 +701,7 @@ jobs:
           stale-issue-label: 'no-issue-activity'
           exempt-issue-labels: 'awaiting-approval,work-in-progress'
           stale-pr-label: 'no-pr-activity'
-          exempt-pr-labels: 'awaiting-approval,work-in-progress'
+          exempt-labels: 'awaiting-approval,work-in-progress'
           only-labels: 'awaiting-feedback,awaiting-answers'
 ```
 

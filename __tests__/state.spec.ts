@@ -38,7 +38,7 @@ describe('state', (): void => {
   it('rehydrate/persist should not be called during processing', async () => {
     const opts: IIssuesProcessorOptions = {
       ...DefaultProcessorOptions,
-      daysBeforeClose: 0
+      timeBeforeClose: 0
     };
     const TestIssueList: Issue[] = [
       generateIssue(opts, 1, 'An issue with no label', '2020-01-01T17:00:00Z')
@@ -62,7 +62,7 @@ describe('state', (): void => {
   it('state should be marked with the processed issue', async () => {
     const opts: IIssuesProcessorOptions = {
       ...DefaultProcessorOptions,
-      daysBeforeClose: 0
+      timeBeforeClose: 0
     };
     const testIssue1 = generateIssue(
       opts,
@@ -92,7 +92,7 @@ describe('state', (): void => {
   it('issueProcessor should skip the issue marked as proceeded', async () => {
     const opts: IIssuesProcessorOptions = {
       ...DefaultProcessorOptions,
-      daysBeforeClose: 0
+      timeBeforeClose: 0
     };
     const testIssue1 = generateIssue(
       opts,
@@ -137,7 +137,7 @@ describe('state', (): void => {
     const opts: IIssuesProcessorOptions = {
       ...DefaultProcessorOptions,
       operationsPerRun: 1,
-      daysBeforeClose: 0
+      timeBeforeClose: 0
     };
     const testIssue1 = generateIssue(
       opts,
@@ -175,7 +175,7 @@ describe('state', (): void => {
   it('state should be reset if all issues are proceeded', async () => {
     const opts: IIssuesProcessorOptions = {
       ...DefaultProcessorOptions,
-      daysBeforeClose: 0
+      timeBeforeClose: 0
     };
     const testIssue1 = generateIssue(
       opts,

@@ -4,6 +4,7 @@ import {isValidDate} from './functions/dates/is-valid-date';
 import {IIssuesProcessorOptions} from './interfaces/issues-processor-options';
 import {Issue} from './classes/issue';
 import {getStateInstance} from './services/state.service';
+import {parseTimeString} from './functions/parse-time-string';
 
 async function _run(): Promise<void> {
   try {
@@ -54,6 +55,39 @@ async function _run(): Promise<void> {
   }
 }
 
+function _parseTimeInput(input: string): number {
+  try {
+    return parseTimeString(input);
+  } catch (error) {
+    const errorMessage = `Invalid time format: "${input}". ${error.message}`;
+    core.setFailed(errorMessage);
+    throw new Error(errorMessage);
+  }
+}
+
+function _getTimeInput(newOptionName: string, oldOptionName: string, required = false): string {
+  // Try new option name first, then fall back to old one for backward compatibility
+  const newValue = core.getInput(newOptionName, {required: false});
+  if (newValue) {
+    return newValue;
+  }
+  
+  const oldValue = core.getInput(oldOptionName, {required});
+  if (oldValue) {
+    // Warn about deprecated option
+    core.info(`Warning: "${oldOptionName}" is deprecated. Please use "${newOptionName}" instead.`);
+    return oldValue;
+  }
+  
+  if (required) {
+    const errorMessage = `Neither "${newOptionName}" nor "${oldOptionName}" was provided, but one is required.`;
+    core.setFailed(errorMessage);
+    throw new Error(errorMessage);
+  }
+  
+  return '';
+}
+
 function _getAndValidateArgs(): IIssuesProcessorOptions {
   const args: IIssuesProcessorOptions = {
     repoToken: core.getInput('repo-token'),
@@ -61,16 +95,20 @@ function _getAndValidateArgs(): IIssuesProcessorOptions {
     stalePrMessage: core.getInput('stale-pr-message'),
     closeIssueMessage: core.getInput('close-issue-message'),
     closePrMessage: core.getInput('close-pr-message'),
-    daysBeforeStale: parseFloat(
-      core.getInput('days-before-stale', {required: true})
+    timeBeforeStale: _parseTimeInput(
+      _getTimeInput('time-before-stale', 'days-before-stale', true)
     ),
-    daysBeforeIssueStale: parseFloat(core.getInput('days-before-issue-stale')),
-    daysBeforePrStale: parseFloat(core.getInput('days-before-pr-stale')),
-    daysBeforeClose: parseInt(
-      core.getInput('days-before-close', {required: true})
+    timeBeforeIssueStale: _getTimeInput('time-before-issue-stale', 'days-before-issue-stale') ? 
+      _parseTimeInput(_getTimeInput('time-before-issue-stale', 'days-before-issue-stale')) : NaN,
+    timeBeforePrStale: _getTimeInput('time-before-pr-stale', 'days-before-pr-stale') ?
+      _parseTimeInput(_getTimeInput('time-before-pr-stale', 'days-before-pr-stale')) : NaN,
+    timeBeforeClose: _parseTimeInput(
+      _getTimeInput('time-before-close', 'days-before-close', true)
     ),
-    daysBeforeIssueClose: parseInt(core.getInput('days-before-issue-close')),
-    daysBeforePrClose: parseInt(core.getInput('days-before-pr-close')),
+    timeBeforeIssueClose: _getTimeInput('time-before-issue-close', 'days-before-issue-close') ?
+      _parseTimeInput(_getTimeInput('time-before-issue-close', 'days-before-issue-close')) : NaN,
+    timeBeforePrClose: _getTimeInput('time-before-pr-close', 'days-before-pr-close') ?
+      _parseTimeInput(_getTimeInput('time-before-pr-close', 'days-before-pr-close')) : NaN,
     staleIssueLabel: core.getInput('stale-issue-label', {required: true}),
     closeIssueLabel: core.getInput('close-issue-label'),
     exemptIssueLabels: core.getInput('exempt-issue-labels'),
@@ -127,15 +165,7 @@ function _getAndValidateArgs(): IIssuesProcessorOptions {
     includeOnlyAssigned: core.getInput('include-only-assigned') === 'true'
   };
 
-  for (const numberInput of ['days-before-stale']) {
-    if (isNaN(parseFloat(core.getInput(numberInput)))) {
-      const errorMessage = `Option "${numberInput}" did not parse to a valid float`;
-      core.setFailed(errorMessage);
-      throw new Error(errorMessage);
-    }
-  }
-
-  for (const numberInput of ['days-before-close', 'operations-per-run']) {
+  for (const numberInput of ['operations-per-run']) {
     if (isNaN(parseInt(core.getInput(numberInput)))) {
       const errorMessage = `Option "${numberInput}" did not parse to a valid integer`;
       core.setFailed(errorMessage);

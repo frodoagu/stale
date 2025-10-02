@@ -1,5 +1,30 @@
 # Changelog
 
+# [Unreleased]
+
+## What's Changed
+
+### 🚀 Features
+* **BREAKING CHANGE**: Renamed option names from `days-before-*` to `time-before-*` to better reflect flexible time format support
+  - `days-before-stale` → `time-before-stale`
+  - `days-before-issue-stale` → `time-before-issue-stale`
+  - `days-before-pr-stale` → `time-before-pr-stale`
+  - `days-before-close` → `time-before-close`
+  - `days-before-issue-close` → `time-before-issue-close`
+  - `days-before-pr-close` → `time-before-pr-close`
+* **NEW**: Added flexible time format support for all timing options - supports days (`1d`), hours (`24h`), and minutes (`120m`)
+* **BACKWARD COMPATIBILITY**: Old `days-before-*` options are still supported but marked as deprecated
+
+### 📖 Documentation
+* Updated README.md to document new flexible time format capabilities
+* Added usage examples showing new time format options (e.g., `12h`, `720m`, `1.5d`)
+* Added backward compatibility documentation
+
+### 🧪 Testing
+* Added comprehensive tests for flexible time format parsing
+* Added backward compatibility tests
+* Added integration tests for time format functionality
+
 # [9.1.0]
 
 ## What's Changed
